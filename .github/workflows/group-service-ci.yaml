@@ -40,7 +40,21 @@ jobs:
         with:
           context: ./group-service
           push: true
-          tags: ghcr.io/nguyenvanhadncntt/group-service:latest
+          labels: org.opencontainers.image.source=https://github.com/nguyenvanhadncntt/skills_assessment
+          tags: ghcr.io/nguyenvanhadncntt/skills_assessment/group-service:latest
           visibility: public
-      
-
+      - name: "Scan Docker Image with Trivy"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/nguyenvanhadncntt/skills_assessment/group-service:latest'
+          format: 'sarif'
+          scan-type: 'image'
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-results.sarif'
+      - name: "Upload Trivy scan results to GitHub Security tab"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
+          category: 'image'
