@@ -1,0 +1,69 @@
+version: "3.9"
+services:
+  identity:
+    image: quay.io/keycloak/keycloak:24.0.3
+    command: ['start-dev']
+    environment:
+      - KEYCLOAK_ADMIN
+      - KEYCLOAK_ADMIN_PASSWORD 
+      - KC_DB
+      - KC_DB_URL
+      - KC_DB_USERNAME
+      - KC_PROXY
+      - KC_DB_PASSWORD
+    ports:
+      - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
+    networks:
+      - skill-assessment-network
+    depends_on: 
+      - postgres
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    hostname: ${RABBITMQ_HOST}
+    ports:
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "${RABBITMQ_UI_PORT}:${RABBITMQ_UI_PORT}"
+    environment:
+        - RABBITMQ_USER
+        - RABBITMQ_PASSWORD
+    networks:
+      - skill-assessment-network
+    volumes:
+      - ./rabbitmq/logs:/var/log/rabbitmq
+      - rabbitmq:/var/lib/rabbitmq
+  redis:
+    image: redis:7-alpine
+    restart: always
+    hostname: ${REDIS_HOST}
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - skill-assessment-network
+    volumes:
+      - redis:/data
+      - ./redis/logs:/var/log/redis
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    hostname: ${POSTGRES_HOST}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/postgres_init.sql
+    networks:
+      - skill-assessment-network
+networks:
+  skill-assessment-network:
+    driver: bridge
+    name: skill-assessment-network
+
+volumes:
+  postgres:
+  pgadmin:
+  rabbitmq:
+  redis:
