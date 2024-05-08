@@ -1,10 +1,10 @@
-package com.learning.skill.assessment.test;
+package com.learning.skill.assessment.examination;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TestApplication {
+public class ExaminationApplication {
     public static void main(String[] args) {
         SpringApplication.run(TestApplication.class, args);
     }
