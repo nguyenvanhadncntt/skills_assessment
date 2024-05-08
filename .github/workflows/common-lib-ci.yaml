@@ -1,7 +1,29 @@
-# name: common-lib module ci
+name: common-lib module ci
 
-# on: 
-#   push:
-#     branches: ["main"]
-#     paths:
-#       - 
+on: 
+  push:
+    branches: ["main"]
+    paths:
+      - 'common-lib/**'
+      - '.github/workflows/actions/action.yaml'
+      - '.github/workflows/common-lib-ci.yaml'
+  pull_request:
+    branches: ["main"]
+    paths:
+      - 'common-lib/**'
+      - '.github/workflows/actions/action.yaml'
+      - '.github/workflows/common-lib-ci.yaml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: ./.github/workflows/actions
+      - name: "Maven Build"
+        run: mvn clean install -pl common-lib -am
+      - name: "Run Maven Test"
+        run: mvn test -pl common-lib -am
