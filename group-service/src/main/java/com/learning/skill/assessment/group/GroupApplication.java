@@ -1,4 +1,4 @@
-package com.learning.skill.assessment;
+package com.learning.skill.assessment.group;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
