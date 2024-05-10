@@ -1,0 +1,68 @@
+name: examination service ci pipeline
+
+on: 
+  push:
+    branches: ["main"]
+    paths:
+      - 'examination-service/**'
+      - '.github/workflows/actions/action.yaml'
+      - '.github/workflows/examination-service-ci.yaml'
+  pull_request:
+    branches: ["main"]
+    paths:
+      - 'examination-service/**'
+      - '.github/workflows/actions/action.yaml'
+      - '.github/workflows/examination-service-ci.yaml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: ./.github/workflows/actions
+      - name: "Maven Build"
+        run: mvn clean install -pl examination-service -am
+      - name: "Run Maven Test"
+        run: mvn test -pl examination-service -am
+      - name: Analyze with sonar cloud
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.ref == 'refs/heads/main' }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -f examination-service
+      - name: "Log in to the Container registry"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_PAT }}
+      - name: "Build and Push Image to ghcr.io"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ./examination-service
+          push: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/nguyenvanhadncntt/skills_assessment
+            org.opencontainers.image.licenses=MIT
+          tags: ghcr.io/nguyenvanhadncntt/skills_assessment/examination-service:latest
+          visibility: public
+      - name: "Scan Docker Image with Trivy"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/nguyenvanhadncntt/skills_assessment/examination-service:latest'
+          format: 'sarif'
+          scan-type: 'image'
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-results.sarif'
+      - name: "Upload Trivy scan results to GitHub Security tab"
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
+          category: 'image'
+
