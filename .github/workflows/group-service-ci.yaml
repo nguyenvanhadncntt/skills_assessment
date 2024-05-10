@@ -45,7 +45,9 @@ jobs:
         with:
           context: ./group-service
           push: true
-          labels: org.opencontainers.image.source=https://github.com/nguyenvanhadncntt/skills_assessment
+          labels: |
+            org.opencontainers.image.source=https://github.com/nguyenvanhadncntt/skills_assessment
+            org.opencontainers.image.licenses=MIT
           tags: ghcr.io/nguyenvanhadncntt/skills_assessment/group-service:latest
           visibility: public
       - name: "Scan Docker Image with Trivy"
